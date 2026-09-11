@@ -3809,7 +3809,7 @@ return Plotly;
   <header>
     <div>
       <p class="eyebrow">ЭКСПОРТЫН ГААЛИЙН МЭДЭЭЛЭЛ · 2023–2026</p>
-      <h1>Амьтны гаралтай бүтээгдэхүүний экспортын урсгал</h1>
+      <h1>Тэнэг Үнэнмөнх хха</h1>
       <p class="subtitle">Үндсэн ангилал → хүлээн авагч улс → хүлээн авагч компанийн хоорондох экспортын үнийн дүнгийн (USD) хуваарилалт.</p>
     </div>
   </header>
@@ -3839,6 +3839,14 @@ return Plotly;
     </div>
     <div id="sankey"></div>
     <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-head">
+      <span class="section-title">Дэлхийн газрын зураг дээрх экспортын урсгал</span>
+      <span class="section-hint">Монголоос хүлээн авагч улс тус бүр рүү, шугамын зузаан ба цэгийн хэмжээ үнийн дүнг илэрхийлнэ</span>
+    </div>
+    <div id="route-map" style="height:540px;"></div>
   </div>
 
   <div class="chart-grid">
@@ -3922,6 +3930,79 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
 </script>
 <script>
 (function(){
+  const MN_COORD = { lat: 47.8864, lon: 106.9057 };
+  const COUNTRY_COORDS = {
+    'АHУ': { lat: 38.9072, lon: -77.0369 },
+    'Австрали': { lat: -35.2809, lon: 149.1300 },
+    'Австри': { lat: 48.2082, lon: 16.3738 },
+    'Азербайжан': { lat: 40.4093, lon: 49.8671 },
+    'Андорра': { lat: 42.5063, lon: 1.5218 },
+    'Арабын Нэгдсэн Эмират': { lat: 24.4539, lon: 54.3773 },
+    'Армен': { lat: 40.1792, lon: 44.4991 },
+    'БНАСАУ': { lat: 39.0392, lon: 125.7625 },
+    'БНСУ': { lat: 37.5665, lon: 126.9780 },
+    'БНХАУ': { lat: 39.9042, lon: 116.4074 },
+    'Бахрайн': { lat: 26.2285, lon: 50.5860 },
+    'Белорус': { lat: 53.9006, lon: 27.5590 },
+    'Бельги': { lat: 50.8503, lon: 4.3517 },
+    'Болгар': { lat: 42.6977, lon: 23.3219 },
+    'Венесуэль': { lat: 10.4806, lon: -66.9036 },
+    'Вьетнам': { lat: 21.0278, lon: 105.8342 },
+    'Герман': { lat: 52.5200, lon: 13.4050 },
+    'Гонконг (Сянган)': { lat: 22.3193, lon: 114.1694 },
+    'Грек': { lat: 37.9838, lon: 23.7275 },
+    'Гүрж': { lat: 41.7151, lon: 44.8271 },
+    'Дани': { lat: 55.6761, lon: 12.5683 },
+    'Египет': { lat: 30.0444, lon: 31.2357 },
+    'Зааны Ясан Эрэг': { lat: 6.8276, lon: -5.2893 },
+    'Ирак': { lat: 33.3152, lon: 44.3661 },
+    'Иран': { lat: 35.6892, lon: 51.3890 },
+    'Ирланд': { lat: 53.3498, lon: -6.2603 },
+    'Исланд': { lat: 64.1466, lon: -21.9426 },
+    'Испани': { lat: 40.4168, lon: -3.7038 },
+    'Итали': { lat: 41.9028, lon: 12.4964 },
+    'Их Британи': { lat: 51.5074, lon: -0.1278 },
+    'Казахстан': { lat: 51.1694, lon: 71.4491 },
+    'Канад': { lat: 45.4215, lon: -75.6972 },
+    'Катар': { lat: 25.2854, lon: 51.5310 },
+    'Кени': { lat: -1.2921, lon: 36.8219 },
+    'Киргизстан': { lat: 42.8746, lon: 74.5698 },
+    'Куба': { lat: 23.1136, lon: -82.3666 },
+    'Кувейт': { lat: 29.3759, lon: 47.9774 },
+    'Ливан': { lat: 33.8938, lon: 35.5018 },
+    'Малайз': { lat: 3.1390, lon: 101.6869 },
+    'Мексик': { lat: 19.4326, lon: -99.1332 },
+    'Монгол': { lat: 47.8864, lon: 106.9057 },
+    'Морокко': { lat: 34.0209, lon: -6.8416 },
+    'Непал': { lat: 27.7172, lon: 85.3240 },
+    'Нидерланд': { lat: 52.3676, lon: 4.9041 },
+    'Норвеги': { lat: 59.9139, lon: 10.7522 },
+    'ОХУ': { lat: 55.7558, lon: 37.6173 },
+    'Пакистан': { lat: 33.6844, lon: 73.0479 },
+    'Панам': { lat: 8.9824, lon: -79.5199 },
+    'Польш': { lat: 52.2297, lon: 21.0122 },
+    'Португал': { lat: 38.7223, lon: -9.1393 },
+    'Румын': { lat: 44.4268, lon: 26.1025 },
+    'Сингапур': { lat: 1.3521, lon: 103.8198 },
+    'Тажикстан': { lat: 38.5598, lon: 68.7870 },
+    'Тайван': { lat: 25.0330, lon: 121.5654 },
+    'Тайланд': { lat: 13.7563, lon: 100.5018 },
+    'Турк': { lat: 39.9334, lon: 32.8597 },
+    'Туркменистан': { lat: 37.9601, lon: 58.3261 },
+    'Узбекстан': { lat: 41.2995, lon: 69.2401 },
+    'Унгар': { lat: 47.4979, lon: 19.0402 },
+    'Филиппин': { lat: 14.5995, lon: 120.9842 },
+    'Финлянд': { lat: 60.1699, lon: 24.9384 },
+    'Франц': { lat: 48.8566, lon: 2.3522 },
+    'Чех': { lat: 50.0755, lon: 14.4378 },
+    'Чили': { lat: -33.4489, lon: -70.6693 },
+    'Швед': { lat: 59.3293, lon: 18.0686 },
+    'Швейцарь': { lat: 46.9480, lon: 7.4474 },
+    'Энэтхэг': { lat: 28.6139, lon: 77.2090 },
+    'Япон': { lat: 35.6762, lon: 139.6503 },
+    'Өмнөд Африкийн Бүгд Hайрамдах улс': { lat: -25.7461, lon: 28.1881 }
+  };
+
   const CAT_COLOR = {
     '1. Махан бүтээгдэхүүн': '#c1553e',
     '2. Дайвар бүтээгдэхүүн': '#cf9f4f',
@@ -4317,10 +4398,89 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
     Plotly.react(elId, data, layout, { displayModeBar: false, responsive: true });
   }
 
+  // ---------- Route map (Mongolia -> destination countries) ----------
+  function renderRouteMap(rows){
+    const totals = new Map();
+    rows.forEach(r => { totals.set(r.country, (totals.get(r.country)||0) + r.usd); });
+    let entries = Array.from(totals.entries()).filter(([c]) => COUNTRY_COORDS[c] && c !== 'Монгол');
+    if (entries.length === 0) {
+      Plotly.react('route-map', [], Object.assign(baseLayout(), {
+        geo: { scope: 'world', projection: { type: 'natural earth' }, showland: true, landcolor: '#1c2530',
+          showocean: true, oceancolor: '#12171c', showcountries: true, countrycolor: '#2b3540',
+          showcoastlines: false, bgcolor: 'rgba(0,0,0,0)', lakecolor: '#12171c' },
+        margin: { l: 0, r: 0, t: 0, b: 0 }
+      }), { displayModeBar: false, responsive: true });
+      return;
+    }
+    const maxVal = Math.max(...entries.map(e => e[1]));
+    entries.sort((a,b) => a[1]-b[1]); // draw largest last so it sits on top
+
+    const traces = entries.map(([country, val]) => {
+      const coord = COUNTRY_COORDS[country];
+      const norm = val / maxVal;
+      const width = 1 + Math.sqrt(norm) * 7;
+      const opacity = 0.16 + norm * 0.68;
+      return {
+        type: 'scattergeo',
+        mode: 'lines',
+        lon: [MN_COORD.lon, coord.lon],
+        lat: [MN_COORD.lat, coord.lat],
+        line: { width: width, color: `rgba(207,159,79,${opacity.toFixed(3)})` },
+        hoverinfo: 'skip',
+        showlegend: false
+      };
+    });
+
+    traces.push({
+      type: 'scattergeo',
+      mode: 'markers',
+      lon: entries.map(([c]) => COUNTRY_COORDS[c].lon),
+      lat: entries.map(([c]) => COUNTRY_COORDS[c].lat),
+      text: entries.map(([c,v]) => `${c}<br>${fmtUsd(v)}`),
+      marker: {
+        size: entries.map(([c,v]) => 5 + Math.sqrt(v/maxVal) * 22),
+        color: '#cf9f4f',
+        opacity: 0.9,
+        line: { color: '#12171c', width: 1 }
+      },
+      hovertemplate: '%{text}<extra></extra>',
+      showlegend: false
+    });
+
+    traces.push({
+      type: 'scattergeo',
+      mode: 'markers+text',
+      lon: [MN_COORD.lon], lat: [MN_COORD.lat],
+      text: ['Монгол'],
+      textposition: 'top center',
+      textfont: { color: '#eceff1', size: 12 },
+      marker: { size: 13, color: '#eceff1', symbol: 'star', line: { color: '#12171c', width: 1 } },
+      hovertemplate: 'Монгол улс (эх сурвалж)<extra></extra>',
+      showlegend: false
+    });
+
+    const layout = Object.assign(baseLayout(), {
+      geo: {
+        scope: 'world',
+        projection: { type: 'natural earth' },
+        showland: true, landcolor: '#1c2530',
+        showocean: true, oceancolor: '#12171c',
+        showcountries: true, countrycolor: '#2b3540',
+        showcoastlines: false,
+        bgcolor: 'rgba(0,0,0,0)',
+        lakecolor: '#12171c'
+      },
+      margin: { l: 0, r: 0, t: 0, b: 0 }
+    });
+
+    Plotly.react('route-map', traces, layout, { displayModeBar: false, responsive: true });
+  }
+
   function render(){
     const rows = getFilteredRows();
     renderKpis(rows);
     renderSankey(rows);
+    renderRouteMap(rows);
     renderTrendChart(rows);
     renderShareDonut(rows);
     renderTopBar(rows, r => r.country, 'top-countries', 10, '#cf9f4f', true);
@@ -4331,7 +4491,7 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
 
   render();
   window.addEventListener('resize', () => {
-    ['sankey','trend-chart','share-donut','top-countries','top-companies','top-products'].forEach(id => {
+    ['sankey','route-map','trend-chart','share-donut','top-countries','top-companies','top-products'].forEach(id => {
       Plotly.Plots.resize(id);
     });
   });
