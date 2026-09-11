@@ -3825,7 +3825,7 @@ return Plotly;
 
   <div class="kpis">
     <div class="kpi"><div class="label">Нийт үнэ</div><div class="value" id="kpi-usd">—<span class="unit">USD</span></div></div>
-    <div class="kpi"><div class="label">Экспортын тоо</div><div class="value" id="kpi-cnt">—</div></div>
+    <div class="kpi"><div class="label">Захиалгын тоо</div><div class="value" id="kpi-cnt">—</div></div>
     <div class="kpi"><div class="label">Хүлээн авагч улс</div><div class="value" id="kpi-country">—</div></div>
     <div class="kpi"><div class="label">Хүлээн авагч компани</div><div class="value" id="kpi-company">—</div></div>
   </div>
@@ -3851,7 +3851,7 @@ return Plotly;
   <div class="panel">
     <div class="section-head">
       <span class="section-title">Урсгалын диаграм</span>
-      <span class="section-hint">Ангилал → Улс → Хүсэлт гаргагч → Хүлээн авагч компани (үнийн дүнгээр жинлэгдсэн)</span>
+      <span class="section-hint">Ангилал → Хүсэлт гаргагч → Улс → Хүлээн авагч компани (үнийн дүнгээр жинлэгдсэн)</span>
     </div>
     <div id="sankey"></div>
     <div class="legend" id="legend"></div>
@@ -3922,7 +3922,7 @@ return Plotly;
             <th data-key="country">Хүлээн авагч улс <span class="arrow"></span></th>
             <th data-key="company">Хүлээн авагч компани <span class="arrow"></span></th>
             <th data-key="usd" class="num">Нийт үнэ, USD <span class="arrow"></span></th>
-            <th data-key="cnt" class="num">Экспортын тоо <span class="arrow"></span></th>
+            <th data-key="cnt" class="num">Захиалгын тоо <span class="arrow"></span></th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
@@ -3930,10 +3930,6 @@ return Plotly;
     </div>
     <div class="table-footer">
       <span id="row-info">—</span>
-      <div style="display:flex;gap:8px;">
-        <button class="pagebtn" id="prev-page">← Өмнөх</button>
-        <button class="pagebtn" id="next-page">Дараах →</button>
-      </div>
     </div>
   </div>
 
@@ -4112,13 +4108,6 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
     });
   });
 
-  document.getElementById('prev-page').addEventListener('click', () => {
-    if (state.page > 0) { state.page--; render(); }
-  });
-  document.getElementById('next-page').addEventListener('click', () => {
-    state.page++; render();
-  });
-
   document.getElementById('data-toggle').addEventListener('click', (e) => {
     state.includeOutlier = !state.includeOutlier;
     e.target.classList.toggle('active', state.includeOutlier);
@@ -4190,15 +4179,15 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
     const companies = orderedBuckets(r => companyBucket(r.company), OTHER_COMPANY);
 
     let offset = cats.length;
-    const countryIndex = new Map(countries.map((c,i) => [c, offset + i])); offset += countries.length;
     const requesterIndex = new Map(requesters.map((c,i) => [c, offset + i])); offset += requesters.length;
+    const countryIndex = new Map(countries.map((c,i) => [c, offset + i])); offset += countries.length;
     const companyIndex = new Map(companies.map((c,i) => [c, offset + i]));
 
-    const labels = [...cats, ...countries, ...requesters, ...companies];
+    const labels = [...cats, ...requesters, ...countries, ...companies];
     const colors = [
       ...cats.map(c => CAT_COLOR[c] || '#888'),
-      ...countries.map(() => '#3d4a56'),
       ...requesters.map(() => '#455567'),
+      ...countries.map(() => '#3d4a56'),
       ...companies.map(() => '#4a5865')
     ];
 
@@ -4220,9 +4209,9 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
       });
     }
 
-    const link1 = buildLinks(c => catIndex.get(c), c => countryIndex.get(c), r => r.cat, r => countryBucket(r.country));
-    const link2 = buildLinks(c => countryIndex.get(c), c => requesterIndex.get(c), r => countryBucket(r.country), r => requesterBucket(r.requester));
-    const link3 = buildLinks(c => requesterIndex.get(c), c => companyIndex.get(c), r => requesterBucket(r.requester), r => companyBucket(r.company));
+    const link1 = buildLinks(c => catIndex.get(c), c => requesterIndex.get(c), r => r.cat, r => requesterBucket(r.requester));
+    const link2 = buildLinks(c => requesterIndex.get(c), c => countryIndex.get(c), r => requesterBucket(r.requester), r => countryBucket(r.country));
+    const link3 = buildLinks(c => countryIndex.get(c), c => companyIndex.get(c), r => countryBucket(r.country), r => companyBucket(r.company));
 
     const allLinks = [...link1, ...link2, ...link3];
     const linkColors = allLinks.map(l => hexToRgba(CAT_COLOR[l.cat] || '#5b7ea3', 0.30));
@@ -4300,13 +4289,9 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
     });
 
     const total = list.length;
-    const maxPage = Math.max(0, Math.ceil(total / state.pageSize) - 1);
-    if (state.page > maxPage) state.page = maxPage;
-    const startIdx = state.page * state.pageSize;
-    const pageItems = list.slice(startIdx, startIdx + state.pageSize);
 
     const tbody = document.getElementById('table-body');
-    tbody.innerHTML = pageItems.map(r => `
+    tbody.innerHTML = list.map(r => `
       <tr>
         <td><span class="tag" style="color:${CAT_COLOR[r.cat]||'#888'};background:${CAT_COLOR[r.cat]?hexToRgba(CAT_COLOR[r.cat],0.14):'rgba(255,255,255,0.06)'}">${r.cat.replace(/^\d+\.\s*/,'')}</span></td>
         <td>${r.country}</td>
@@ -4317,9 +4302,7 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
     `).join('');
 
     document.getElementById('row-info').textContent =
-      total === 0 ? 'Илэрц алга' : `${startIdx+1}–${Math.min(startIdx+state.pageSize,total)} / ${total} мөр`;
-    document.getElementById('prev-page').disabled = state.page === 0;
-    document.getElementById('next-page').disabled = state.page >= maxPage;
+      total === 0 ? 'Илэрц алга' : `${total} мөр`;
   }
 
   // ---------- Shared chart layout ----------
@@ -4467,6 +4450,19 @@ const RAW_DATA = [{"cat":"1. Махан бүтээгдэхүүн","country":"А�
         line: { color: '#12171c', width: 1 }
       },
       hovertemplate: '%{text}<extra></extra>',
+      showlegend: false
+    });
+
+    const top5 = entries.slice(-5).reverse();
+    traces.push({
+      type: 'scattergeo',
+      mode: 'text',
+      lon: top5.map(([c]) => COUNTRY_COORDS[c].lon),
+      lat: top5.map(([c]) => COUNTRY_COORDS[c].lat),
+      text: top5.map(([c,v]) => `${c}<br>${fmtUsd(v)}`),
+      textposition: 'top center',
+      textfont: { color: '#eceff1', size: 11 },
+      hoverinfo: 'skip',
       showlegend: false
     });
 
